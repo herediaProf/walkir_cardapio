@@ -20,7 +20,14 @@ SECRET_KEY = os.getenv(
 DEBUG = os.getenv("DEVELOPMENT", "True") == "True"
 
 # Permitir localhost para desenvolvimento e os domínios do Railway para produção
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".railway.app"]
+# Permitir localhost, domínios do Railway e o seu domínio próprio em produção
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".railway.app",
+    "alphaomegainfo.ong.br",
+    "www.alphaomegainfo.ong.br",
+]
 
 
 # Application definition
