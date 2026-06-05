@@ -20,7 +20,28 @@ SECRET_KEY = os.getenv(
 DEBUG = os.getenv("DEVELOPMENT", "True") == "True"
 
 # Permitir localhost para desenvolvimento e os domínios do Railway para produção
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".railway.app"]
+
+# 1. Libera o Django para responder nos seus domínios e na estrutura da Railway
+ALLOWED_HOSTS = [
+    "api.alphaomegainfo.ong.br",
+    "www.alphaomegainfo.ong.br",
+    "alphaomegainfo.ong.br",
+    "walkircardapio-production-cf64.up.railway.app",
+    "localhost",
+    "127.0.0.1",
+    ".railway.app",
+]
+
+# 2. Libera a validação de segurança do CSRF (Adicione com o prefixo https://)
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.alphaomegainfo.ong.br",
+    "https://www.alphaomegainfo.ong.br",
+    "https://alphaomegainfo.ong.br",
+    "https://walkircardapio-production-cf64.up.railway.app",
+]
+
+# 3. Garante que o Django confie no proxy HTTPS do Railway e da Cloudflare
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -44,8 +65,6 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # Middleware do CORS inserido no topo (obrigatório por documentação)
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
