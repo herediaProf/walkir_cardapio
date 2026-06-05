@@ -15,3 +15,6 @@ psycopg2-binary==2.9.12
 pycparser==3.0
 pypdfium2==5.9.0
 sqlparse==0.5.5
+django>=5.0
+dj-database-url
+gunicorn
