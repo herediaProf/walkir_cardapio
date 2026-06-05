@@ -1,152 +1,217 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { CloudSun, Utensils, Coffee, Moon, Calendar, Info, ShieldAlert } from 'lucide-react';
 
-function App() {
-  // Estados do Aplicativo
-  const [itensCardapio, setItensCardapio] = useState([])
-  const [carrinho, setCarrinho] = useState([])
-  const [carregando, setCarregando] = useState(true)
-  const [erro, setErro] = useState(null)
+export default function App() {
+  // Estado para controlar o dia selecionado (Iniciando na primeira segunda-feira de Junho de 2026)
+  const [dataSelecionada, setDataSelecionada] = useState("2026-06-01");
+  const [cardapioDoDia, setCardapioDoDia] = useState(null);
+  const [carregando, setCarregando] = useState(false);
 
-  // URL da sua API Django que configuramos na Cloudflare/Railway
-  const API_URL = 'https://api.alphaomegainfo.ong.br/api/cardapio/' 
-  // Número de WhatsApp do Walkir (substitua pelo número real com DDD, sem espaços)
-  const WHATSAPP_NUMERO = '5511999999999' 
+  // Lista dos dias de Junho de 2026 para gerar os botões do calendário local
+  // Podemos mapear os dias úteis ou o mês inteiro de forma simples
+  const diasJunho = [
+    { data: "2026-06-01", label: "01", sem: "Seg" },
+    { data: "2026-06-02", label: "02", sem: "Ter" },
+    { data: "2026-06-03", label: "03", sem: "Qua" },
+    { data: "2026-06-04", label: "04", sem: "Qui" },
+    { data: "2026-06-05", label: "05", sem: "Sexta (Feriado)" },
+    { data: "2026-06-08", label: "08", sem: "Seg" },
+    { data: "2026-06-09", label: "09", sem: "Ter" },
+    { data: "2026-06-10", label: "10", sem: "Qua" },
+    { data: "2026-06-11", label: "11", sem: "Qui" },
+    { data: "2026-06-12", label: "12", sem: "Sex" },
+    { data: "2026-06-29", label: "29", sem: "Seg" },
+    { data: "2026-06-30", label: "30", sem: "Ter" },
+  ];
 
-  // Buscar dados do Backend Django quando a tela carregar
+  // Efeito colateral para buscar dados na API do Django toda vez que mudar o dia selecionado
   useEffect(() => {
-    fetch(API_URL)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Não foi possível carregar o cardápio.')
-        }
-        return response.json()
-      })
+    setCarregando(true);
+    fetch(`https://charismatic-education-production-a8c8.up.railway.app/`)
+      .then((res) => res.json())
       .then((data) => {
-        setItensCardapio(data)
-        setCarregando(false)
+        if (data.length > 0) {
+          setCardapioDoDia(data[0]);
+        } else {
+          setCardapioDoDia(null);
+        }
+        setCarregando(false);
       })
       .catch((err) => {
-        setErro(err.message)
-        setCarregando(false)
-        
-        // MOCKUP TEMPORÁRIO: Caso sua API ainda não tenha dados, 
-        // inserimos esses itens de teste para o site não ficar em branco
-        setItensCardapio([
-          { id: 1, nome: 'Hambúrguer Artesanal', descricao: 'Pão brioche, blend 150g, queijo cheddar e maionese da casa.', preco: 28.90 },
-          { id: 2, nome: 'Batata Frita Especial', descricao: 'Batata rústica frita acompanhada de bacon crocante e cheddar.', preco: 18.00 },
-          { id: 3, nome: 'Refrigerante Lata', descricao: 'Coca-cola, Guaraná ou Fanta 350ml.', preco: 6.00 }
-        ])
-      })
-  }, [])
-
-  // Função para adicionar item ao carrinho
-  const adicionarAoCarrinho = (produto) => {
-    setCarrinho((itensAtuais) => {
-      const itemExiste = itensAtuais.find((item) => item.id === produto.id)
-      if (itemExiste) {
-        return itensAtuais.map((item) =>
-          item.id === produto.id ? { ...item, quantidade: item.quantidade + 1 } : item
-        )
-      }
-      return [...itensAtuais, { ...produto, quantidade: 1 }]
-    })
-  }
-
-  // Função para remover ou diminuir item do carrinho
-  const removerDoCarrinho = (id) => {
-    setCarrinho((itensAtuais) => {
-      const item = itensAtuais.find((i) => i.id === id)
-      if (item.quantidade === 1) {
-        return itensAtuais.filter((i) => i.id !== id)
-      }
-      return itensAtuais.map((i) =>
-        i.id === id ? { ...i, quantidade: i.quantidade - 1 } : i
-      )
-    })
-  }
-
-  // Calcular valor total do carrinho
-  const totalCarrinho = carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0)
-
-  // Enviar pedido formatado para o WhatsApp do Walkir
-  const finalizarPedidoWhatsApp = () => {
-    if (carrinho.length === 0) return
-
-    let mensagem = `*Novo Pedido - Cardápio Digital* 🍔\n\n`
-    carrinho.forEach((item) => {
-      mensagem += `${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2)}\n`
-    })
-    mensagem += `\n*Total: R$ ${totalCarrinho.toFixed(2)}*`
-    
-    const urlFormatada = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMERO}&text=${encodeURIComponent(mensagem)}`
-    window.open(urlFormatada, '_blank')
-  }
+        console.error("Erro ao conectar com a API Backend:", err);
+        setCarregando(false);
+      });
+  }, [dataSelecionada]);
 
   return (
-    <div className="cardapio-container">
-      {/* Cabeçalho */}
-      <header className="cardapio-header">
-        <h1>Cardápio Digital</h1>
-        <p>Seja bem-vindo! Faça o seu pedido abaixo.</p>
+    <div style={styles.container}>
+      {/* CABEÇALHO DO PORTAL */}
+      <header style={styles.header}>
+        <h1 style={styles.titulo}>🏫 Portal Escolar - EM Walkir Vergani</h1>
+        <p style={styles.subtitulo}>Acompanhe o cardápio diário da merenda e as condições meteorológicas locais.</p>
       </header>
 
-      {/* Conteúdo Principal */}
-      <main className="cardapio-main">
-        <section className="produtos-section">
-          <h2>Nossas Opções</h2>
-          {carregando && <p className="status-txt">Carregando cardápio...</p>}
-          {erro && <p className="status-txt erro">Nota: Carregando modo de demonstração ({erro})</p>}
+      <div style={styles.dashboardGrid}>
+        
+        {/* SEÇÃO DA ESQUERDA: CALENDÁRIO & ESTAÇÃO */}
+        <div style={styles.colunaEsquerda}>
           
-          <div className="produtos-grid">
-            {itensCardapio.map((produto) => (
-              <div key={produto.id} className="produto-card">
-                <h3>{produto.nome}</h3>
-                <p>{produto.descricao}</p>
-                <div className="produto-footer">
-                  <span className="preco">R$ {Number(produto.preco).toFixed(2)}</span>
-                  <button onClick={() => adicionarAoCarrinho(produto)}>
-                    Adicionar +
-                  </button>
-                </div>
-              </div>
-            ))}
+          {/* WIDGET METEOROLÓGICO */}
+          <div style={styles.cardClima}>
+            <div style={styles.cardClimaHeader}>
+              <CloudSun size={28} color="#00796b" />
+              <h3 style={styles.cardClimaTitulo}>Estação Meteorológica - Boiçucanga</h3>
+            </div>
+            <p style={styles.cardClimaTexto}>
+              Monitore a temperatura, vento e chuva ao vivo antes de sair de casa para a escola.
+            </p>
+            <a 
+              href="https://hexacloud.com.br/dashboard/?session=estacaoboicucanga" 
+              target="_blank" 
+              rel="noreferrer" 
+              style={styles.botaoClima}
+            >
+              Acessar Painel Satélite Ao Vivo →
+            </a>
           </div>
-        </section>
 
-        {/* Lateral do Carrinho */}
-        <aside className="carrinho-aside">
-          <h2>Seu Carrinho</h2>
-          {carrinho.length === 0 ? (
-            <p className="carrinho-vazio">O carrinho está vazio.</p>
-          ) : (
-            <>
-              <div className="carrinho-itens">
-                {carrinho.map((item) => (
-                  <div key={item.id} className="carrinho-item">
-                    <div>
-                      <h4>{item.nome}</h4>
-                      <span>{item.quantidade}x - R$ {(item.preco * item.quantidade).toFixed(2)}</span>
-                    </div>
-                    <div className="carrinho-acoes">
-                      <button onClick={() => removerDoCarrinho(item.id)}>-</button>
-                      <button onClick={() => adicionarAoCarrinho(item)}>+</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="carrinho-total">
-                <h3>Total: R$ {totalCarrinho.toFixed(2)}</h3>
-                <button className="btn-finalizar" onClick={finalizarPedidoWhatsApp}>
-                  Enviar Pedido via WhatsApp
+          {/* SELETOR DE CALENDÁRIO */}
+          <div style={styles.cardCalendario}>
+            <div style={styles.cardHeaderGeneric}>
+              <Calendar size={20} color="#333" />
+              <h3 style={styles.genericTitulo}>Selecione um Dia (Junho 2026)</h3>
+            </div>
+            
+            <div style={styles.gradeBotoes}>
+              {diasJunho.map((item) => (
+                <button
+                  key={item.data}
+                  onClick={() => setDataSelecionada(item.data)}
+                  style={{
+                    ...styles.botaoDia,
+                    backgroundColor: dataSelecionada === item.data ? '#0284c7' : '#f1f5f9',
+                    color: dataSelecionada === item.data ? '#fff' : '#334155',
+                    border: dataSelecionada === item.data ? '1px solid #0284c7' : '1px solid #cbd5e1'
+                  }}
+                >
+                  <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{item.label}</span>
+                  <span style={{ fontSize: '10px', opacity: 0.8 }}>{item.sem}</span>
                 </button>
-              </div>
-            </>
-          )}
-        </aside>
-      </main>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* SEÇÃO DA DIREITA: EXIBIÇÃO DETALHADA DO CARDÁPIO */}
+        <div style={styles.colunaDireita}>
+          <div style={styles.cardRefeicoes}>
+            <h2 style={styles.refeicaoMainTitle}>
+              🍽️ Refeições para {dataSelecionada.split('-').reverse().join('/')}
+            </h2>
+
+            {carregando ? (
+              <p style={styles.loadingText}>Carregando cardápio oficial...</p>
+            ) : cardapioDoDia ? (
+              
+              cardapioDoDia.eh_feriado ? (
+                <div style={styles.containerFeriado}>
+                  <ShieldAlert size={40} color="#dc2626" />
+                  <h3 style={styles.tituloFeriado}>Não haverá Atendimento Escolar</h3>
+                  <p style={styles.subFeriado}>{cardapioDoDia.observacao || "Feriado ou Ponto Facultativo"}</p>
+                </div>
+              ) : (
+                <div style={styles.listaRefeicoes}>
+                  
+                  {/* LANCHE DA MANHÃ */}
+                  <div style={styles.itemRefeicao}>
+                    <div style={styles.refeicaoIconHeader}>
+                      <Coffee size={20} color="#b45309" />
+                      <h4 style={styles.refeicaoNome}>Lanche da Manhã</h4>
+                    </div>
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_manha || "Nenhum prato cadastrado para este período."}</p>
+                  </div>
+
+                  {/* ALMOÇO */}
+                  <div style={styles.itemRefeicaoDestaque}>
+                    <div style={styles.refeicaoIconHeader}>
+                      <Utensils size={22} color="#15803d" />
+                      <h4 style={{...styles.refeicaoNome, color: '#15803d'}}>Almoço Principal</h4>
+                    </div>
+                    <p style={styles.refeicaoTextoDestaque}>{cardapioDoDia.almoco || "Nenhum prato cadastrado para este período."}</p>
+                  </div>
+
+                  {/* LANCHE DA TARDE */}
+                  <div style={styles.itemRefeicao}>
+                    <div style={styles.refeicaoIconHeader}>
+                      <Coffee size={20} color="#b45309" />
+                      <h4 style={styles.refeicaoNome}>Lanche da Tarde</h4>
+                    </div>
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_tarde || "Nenhum prato cadastrado para este período."}</p>
+                  </div>
+
+                  {/* JANTAR / EJA */}
+                  <div style={styles.itemRefeicao}>
+                    <div style={styles.refeicaoIconHeader}>
+                      <Moon size={20} color="#1e3a8a" />
+                      <h4 style={styles.refeicaoNome}>Noturno / EJA</h4>
+                    </div>
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.eja || "Mesmo cardápio do almoço ou não informado."}</p>
+                  </div>
+
+                  {cardapioDoDia.observacao && (
+                    <div style={styles.containerObs}>
+                      <Info size={16} color="#0284c7" />
+                      <p style={styles.textoObs}><strong>Nota:</strong> {cardapioDoDia.observacao}</p>
+                    </div>
+                  )}
+
+                </div>
+              )
+
+            ) : (
+              <p style={styles.loadingText}>Nenhum registro encontrado para este dia no banco de dados.</p>
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+// OBJETO DE ESTILOS CSS-IN-JS LIMPO PARA FACILITAR A CONFIGURAÇÃO
+const styles = {
+  container: { maxWidth: '1200px', margin: '0 auto', padding: '24px', fontFamily: 'system-ui, sans-serif', color: '#1e293b', backgroundColor: '#f8fafc', minHeight: '100vh' },
+  header: { borderBottom: '2px solid #e2e8f0', paddingBottom: '16px', marginBottom: '24px' },
+  titulo: { fontSize: '28px', fontWeight: 'bold', color: '#0f172a', margin: 0 },
+  subtitulo: { fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' },
+  dashboardGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' },
+  colunaEsquerda: { display: 'flex', flexDirection: 'column', gap: '20px' },
+  colunaDireita: { display: 'flex', flexDirection: 'column' },
+  cardClima: { backgroundColor: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' },
+  cardClimaHeader: { display: 'flex', alignItems: 'center', gap: '10px' },
+  cardClimaTitulo: { fontSize: '16px', fontWeight: 'bold', color: '#0369a1', margin: 0 },
+  cardClimaTexto: { fontSize: '13px', color: '#0c4a6e', margin: 0, lineHeight: '1.5' },
+  botaoClima: { display: 'inline-block', alignSelf: 'flex-start', backgroundColor: '#0284c7', color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', transition: 'background 0.2s' },
+  cardCalendario: { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px' },
+  cardHeaderGeneric: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' },
+  genericTitulo: { fontSize: '15px', fontWeight: '600', margin: 0 },
+  gradeBotoes: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' },
+  botaoDia: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
+  cardRefeicoes: { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', flex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
+  refeicaoMainTitle: { fontSize: '18px', fontWeight: 'bold', color: '#0f172a', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px', margin: '0 0 20px 0' },
+  loadingText: { color: '#64748b', fontStyle: 'italic', fontSize: '14px' },
+  listaRefeicoes: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  itemRefeicao: { backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '8px', padding: '14px' },
+  itemRefeicaoDestaque: { backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '16px' },
+  refeicaoIconHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' },
+  refeicaoNome: { fontSize: '14px', fontWeight: '700', color: '#475569', margin: 0 },
+  refeicaoTexto: { fontSize: '14px', color: '#334155', margin: 0, lineHeight: '1.4' },
+  refeicaoTextoDestaque: { fontSize: '15px', color: '#166534', margin: 0, fontWeight: '500', lineHeight: '1.5' },
+  containerObs: { display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f0f9ff', padding: '10px', borderRadius: '6px', marginTop: '10px' },
+  textoObs: { fontSize: '12px', color: '#0369a1', margin: 0 },
+  containerFeriado: { textAlign: 'center', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
+  tituloFeriado: { fontSize: '18px', fontWeight: 'bold', color: '#991b1b', margin: 0 },
+  subFeriado: { fontSize: '14px', color: '#7f1d1d', margin: 0 }
+};
