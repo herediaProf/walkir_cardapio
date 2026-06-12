@@ -8,29 +8,48 @@ export default function App() {
   const [carregando, setCarregando] = useState(false);
 
   // Lista dos dias de Junho de 2026 para gerar os botões do calendário local
-  // Podemos mapear os dias úteis ou o mês inteiro de forma simples
   const diasJunho = [
     { data: "2026-06-01", label: "01", sem: "Seg" },
     { data: "2026-06-02", label: "02", sem: "Ter" },
     { data: "2026-06-03", label: "03", sem: "Qua" },
     { data: "2026-06-04", label: "04", sem: "Qui" },
-    { data: "2026-06-05", label: "05", sem: "Sexta (Feriado)" },
+    { data: "2026-06-05", label: "05", sem: "Feriado" },
     { data: "2026-06-08", label: "08", sem: "Seg" },
     { data: "2026-06-09", label: "09", sem: "Ter" },
     { data: "2026-06-10", label: "10", sem: "Qua" },
     { data: "2026-06-11", label: "11", sem: "Qui" },
     { data: "2026-06-12", label: "12", sem: "Sex" },
+    { data: "2026-06-13", label: "13", sem: "Sab" },
+    { data: "2026-06-14", label: "14", sem: "Dom" },
+    { data: "2026-06-15", label: "15", sem: "Seg" },
+    { data: "2026-06-16", label: "16", sem: "Ter" },
+    { data: "2026-06-17", label: "17", sem: "Qua" },
+    { data: "2026-06-18", label: "18", sem: "Qui" },
+    { data: "2026-06-19", label: "19", sem: "Sex" },
+    { data: "2026-06-20", label: "20", sem: "Sab" },
+    { data: "2026-06-21", label: "21", sem: "Dom" },
+    { data: "2026-06-22", label: "22", sem: "Seg" },
+    { data: "2026-06-23", label: "23", sem: "Ter" },
+    { data: "2026-06-24", label: "24", sem: "Qua" },
+    { data: "2026-06-25", label: "25", sem: "Qui" },
+    { data: "2026-06-26", label: "26", sem: "Sex" },
     { data: "2026-06-29", label: "29", sem: "Seg" },
     { data: "2026-06-30", label: "30", sem: "Ter" },
   ];
 
-  // Efeito colateral para buscar dados na API do Django toda vez que mudar o dia selecionado
+  // Efeito colateral para buscar dados na API toda vez que mudar o dia selecionado
   useEffect(() => {
     setCarregando(true);
-    fetch(`https://charismatic-education-production-a8c8.up.railway.app/`)
+    
+    // Define dinamicamente a URL da API baseando-se em onde o front está rodando
+    const apiBaseUrl = window.location.hostname === 'localhost'
+      ? 'http://127.0.0.1:8000' 
+      : 'https://walkircardapio-production-cf64.up.railway.app';
+
+    fetch(`${apiBaseUrl}/api/cardapio/dias/?data=${dataSelecionada}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.length > 0) {
+        if (data && data.length > 0) {
           setCardapioDoDia(data[0]);
         } else {
           setCardapioDoDia(null);
@@ -66,7 +85,7 @@ export default function App() {
               Monitore a temperatura, vento e chuva ao vivo antes de sair de casa para a escola.
             </p>
             <a 
-              href="https://hexacloud.com.br/dashboard/?session=estacaoboicucanga" 
+              href="https://hexacloud.com.br/dashboard/?session=estacaoboi" 
               target="_blank" 
               rel="noreferrer" 
               style={styles.botaoClima}
@@ -114,11 +133,12 @@ export default function App() {
               <p style={styles.loadingText}>Carregando cardápio oficial...</p>
             ) : cardapioDoDia ? (
               
-              cardapioDoDia.eh_feriado ? (
+              // 'f' corresponde ao campo Booleano de feriado enviado pelo backend
+              cardapioDoDia.f ? (
                 <div style={styles.containerFeriado}>
                   <ShieldAlert size={40} color="#dc2626" />
                   <h3 style={styles.tituloFeriado}>Não haverá Atendimento Escolar</h3>
-                  <p style={styles.subFeriado}>{cardapioDoDia.observacao || "Feriado ou Ponto Facultativo"}</p>
+                  <p style={styles.subFeriado}>{cardapioDoDia.o || "Feriado ou Ponto Facultativo"}</p>
                 </div>
               ) : (
                 <div style={styles.listaRefeicoes}>
@@ -129,7 +149,7 @@ export default function App() {
                       <Coffee size={20} color="#b45309" />
                       <h4 style={styles.refeicaoNome}>Lanche da Manhã</h4>
                     </div>
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_manha || "Nenhum prato cadastrado para este período."}</p>
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.m || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* ALMOÇO */}
@@ -138,7 +158,7 @@ export default function App() {
                       <Utensils size={22} color="#15803d" />
                       <h4 style={{...styles.refeicaoNome, color: '#15803d'}}>Almoço Principal</h4>
                     </div>
-                    <p style={styles.refeicaoTextoDestaque}>{cardapioDoDia.almoco || "Nenhum prato cadastrado para este período."}</p>
+                    <p style={styles.refeicaoTextoDestaque}>{cardapioDoDia.a || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* LANCHE DA TARDE */}
@@ -147,7 +167,7 @@ export default function App() {
                       <Coffee size={20} color="#b45309" />
                       <h4 style={styles.refeicaoNome}>Lanche da Tarde</h4>
                     </div>
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_tarde || "Nenhum prato cadastrado para este período."}</p>
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.t || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* JANTAR / EJA */}
@@ -156,13 +176,15 @@ export default function App() {
                       <Moon size={20} color="#1e3a8a" />
                       <h4 style={styles.refeicaoNome}>Noturno / EJA</h4>
                     </div>
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.eja || "Mesmo cardápio do almoço ou não informado."}</p>
+                    {/* Se o campo EJA não existir separadamente no script, mapeamos para repetir o prato principal 'a' */}
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.a || "Mesmo cardápio do almoço ou não informado."}</p>
                   </div>
 
-                  {cardapioDoDia.observacao && (
+                  {/* OBSERVAÇÕES */}
+                  {cardapioDoDia.o && (
                     <div style={styles.containerObs}>
                       <Info size={16} color="#0284c7" />
-                      <p style={styles.textoObs}><strong>Nota:</strong> {cardapioDoDia.observacao}</p>
+                      <p style={styles.textoObs}><strong>Nota:</strong> {cardapioDoDia.o}</p>
                     </div>
                   )}
 
@@ -180,7 +202,7 @@ export default function App() {
   );
 }
 
-// OBJETO DE ESTILOS CSS-IN-JS LIMPO PARA FACILITAR A CONFIGURAÇÃO
+// OBJETO DE ESTILOS CSS-IN-JS
 const styles = {
   container: { maxWidth: '1200px', margin: '0 auto', padding: '24px', fontFamily: 'system-ui, sans-serif', color: '#1e293b', backgroundColor: '#f8fafc', minHeight: '100vh' },
   header: { borderBottom: '2px solid #e2e8f0', paddingBottom: '16px', marginBottom: '24px' },
