@@ -129,16 +129,18 @@ export default function App() {
               🍽️ Refeições para {dataSelecionada.split('-').reverse().join('/')}
             </h2>
 
+            {/* ONDE EXIBE O CARDÁPIO OU FERIADO DENTRO DA COLUNA DIREITA */}
             {carregando ? (
               <p style={styles.loadingText}>Carregando cardápio oficial...</p>
             ) : cardapioDoDia ? (
               
-              // 'f' corresponde ao campo Booleano de feriado enviado pelo backend
-              cardapioDoDia.f ? (
+              // CORRIGIDO: Alterado de .f para .eh_feriado conforme o JSON do Django
+              cardapioDoDia.eh_feriado ? (
                 <div style={styles.containerFeriado}>
                   <ShieldAlert size={40} color="#dc2626" />
                   <h3 style={styles.tituloFeriado}>Não haverá Atendimento Escolar</h3>
-                  <p style={styles.subFeriado}>{cardapioDoDia.o || "Feriado ou Ponto Facultativo"}</p>
+                  {/* CORRIGIDO: Alterado de .o para .observacao */}
+                  <p style={styles.subFeriado}>{cardapioDoDia.observacao || "Feriado ou Ponto Facultativo"}</p>
                 </div>
               ) : (
                 <div style={styles.listaRefeicoes}>
@@ -149,7 +151,8 @@ export default function App() {
                       <Coffee size={20} color="#b45309" />
                       <h4 style={styles.refeicaoNome}>Lanche da Manhã</h4>
                     </div>
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.m || "Nenhum prato cadastrado para este período."}</p>
+                    {/* CORRIGIDO: Alterado de .m para .lanche_manha */}
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_manha || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* ALMOÇO */}
@@ -158,7 +161,8 @@ export default function App() {
                       <Utensils size={22} color="#15803d" />
                       <h4 style={{...styles.refeicaoNome, color: '#15803d'}}>Almoço Principal</h4>
                     </div>
-                    <p style={styles.refeicaoTextoDestaque}>{cardapioDoDia.a || "Nenhum prato cadastrado para este período."}</p>
+                    {/* CORRIGIDO: Alterado de .a para .almoco */}
+                    <p style={styles.refeicaoTextoDestaque}>{cardapioDoDia.almoco || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* LANCHE DA TARDE */}
@@ -167,7 +171,8 @@ export default function App() {
                       <Coffee size={20} color="#b45309" />
                       <h4 style={styles.refeicaoNome}>Lanche da Tarde</h4>
                     </div>
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.t || "Nenhum prato cadastrado para este período."}</p>
+                    {/* CORRIGIDO: Alterado de .t para .lanche_tarde */}
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.lanche_tarde || "Nenhum prato cadastrado para este período."}</p>
                   </div>
 
                   {/* JANTAR / EJA */}
@@ -176,15 +181,16 @@ export default function App() {
                       <Moon size={20} color="#1e3a8a" />
                       <h4 style={styles.refeicaoNome}>Noturno / EJA</h4>
                     </div>
-                    {/* Se o campo EJA não existir separadamente no script, mapeamos para repetir o prato principal 'a' */}
-                    <p style={styles.refeicaoTexto}>{cardapioDoDia.a || "Mesmo cardápio do almoço ou não informado."}</p>
+                    {/* CORRIGIDO: Tenta buscar o campo .eja enviado pelo backend, se não houver usa o .almoco */}
+                    <p style={styles.refeicaoTexto}>{cardapioDoDia.eja || cardapioDoDia.almoco || "Mesmo cardápio do almoço ou não informado."}</p>
                   </div>
 
                   {/* OBSERVAÇÕES */}
-                  {cardapioDoDia.o && (
+                  {/* CORRIGIDO: Alterado de .o para .observacao */}
+                  {cardapioDoDia.observacao && (
                     <div style={styles.containerObs}>
                       <Info size={16} color="#0284c7" />
-                      <p style={styles.textoObs}><strong>Nota:</strong> {cardapioDoDia.o}</p>
+                      <p style={styles.textoObs}><strong>Nota:</strong> {cardapioDoDia.observacao}</p>
                     </div>
                   )}
 
